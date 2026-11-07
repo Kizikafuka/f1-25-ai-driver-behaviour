@@ -1,0 +1,9 @@
+{
+  "conflicts": [
+    {
+      "id": "kizi.ai-tweaks",
+      "version": "<0.5.0",
+      "why": "the old AI Racing Tweaks also sets the racecraft, car control and driver variation values; update it"
+    }
+  ]
+}

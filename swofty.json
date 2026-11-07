@@ -1,0 +1,242 @@
+{
+  "schema_version": 1,
+  "id": "kizi.ai-driver-behaviour",
+  "name": "AI Driver Behaviour",
+  "version": "0.1.8",
+  "author": "Kizi",
+  "description": "How AI drivers race and drive: gap to other cars, making room, slides and spins, damage, pace. Every driver can race differently. Experimental.",
+  "license": "MIT",
+  "repository": "https://github.com/Kizikafuka/f1-25-ai-driver-behaviour",
+  "icon": "icon.png",
+  "category": "ai",
+  "kind": [
+    "native",
+    "database"
+  ],
+  "compat": {
+    "game": "f1_25",
+    "launcher": ">=1.8.19"
+  },
+  "requires": [
+    {
+      "id": "swofty.core",
+      "version": ">=0.1.0"
+    }
+  ],
+  "options": [
+    {
+      "id": "spacing",
+      "type": "choice",
+      "label": "Close racing: gap to other cars",
+      "description": "The gap an AI car keeps to other cars (the game's value is 0.35). Smaller = closer racing, None = no gap kept. The same for every car.",
+      "values": [
+        {
+          "value": "0.35",
+          "label": "Stock"
+        },
+        {
+          "value": "0.25",
+          "label": "Closer"
+        },
+        {
+          "value": "0.15",
+          "label": "Tight"
+        },
+        {
+          "value": "0.08",
+          "label": "Very tight"
+        },
+        {
+          "value": "0.04",
+          "label": "Extreme"
+        },
+        {
+          "value": "0",
+          "label": "None (no space kept)"
+        }
+      ],
+      "default": "0.15",
+      "binds": "db"
+    },
+    {
+      "id": "alongside",
+      "type": "choice",
+      "label": "Close racing: when they make room",
+      "description": "How much of a car must be alongside an AI car (0 to 1, the game's value is 0.33) before the AI moves over. Higher = it reacts later and holds its line.",
+      "values": [
+        {
+          "value": "0.33",
+          "label": "Stock"
+        },
+        {
+          "value": "0.5",
+          "label": "Later"
+        },
+        {
+          "value": "0.7",
+          "label": "Much later"
+        },
+        {
+          "value": "0.85",
+          "label": "Very late"
+        },
+        {
+          "value": "0.95",
+          "label": "Almost never"
+        }
+      ],
+      "default": "0.7",
+      "binds": "db"
+    },
+    {
+      "id": "variety",
+      "type": "choice",
+      "label": "Close racing: drivers differ",
+      "description": "Gives each driver their own value around \"when they make room\" (up to ±0.06, ±0.12 or ±0.18), plus their own attack distance and commitment to a pass. Fixed per driver. The gap is not changed.",
+      "values": [
+        {
+          "value": "off",
+          "label": "Off"
+        },
+        {
+          "value": "small",
+          "label": "Small"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "big",
+          "label": "Big"
+        }
+      ],
+      "default": "medium",
+      "binds": "db"
+    },
+    {
+      "id": "steer_correction",
+      "type": "choice",
+      "label": "Slides: steering correction",
+      "description": "Scales the AI's steering gains to 75, 50 or 25 % and slows its steering smoothing. Weaker = slides are caught later.",
+      "values": [
+        {
+          "value": "stock",
+          "label": "Stock"
+        },
+        {
+          "value": "75",
+          "label": "75%"
+        },
+        {
+          "value": "50",
+          "label": "50%"
+        },
+        {
+          "value": "25",
+          "label": "25%"
+        }
+      ],
+      "default": "25",
+      "binds": "db"
+    },
+    {
+      "id": "traction_control",
+      "type": "choice",
+      "label": "Slides: traction control",
+      "description": "Scales the AI's traction control to half or off. Less = more wheelspin on corner exit.",
+      "values": [
+        {
+          "value": "stock",
+          "label": "Stock"
+        },
+        {
+          "value": "half",
+          "label": "Half"
+        },
+        {
+          "value": "off",
+          "label": "Off"
+        }
+      ],
+      "default": "half",
+      "binds": "db"
+    },
+    {
+      "id": "throttle_cut",
+      "type": "choice",
+      "label": "Slides: when they lift off",
+      "description": "How far into a slide the AI starts lifting off the throttle (the game's value is 0.5). Higher = it keeps full throttle deeper into a slide.",
+      "values": [
+        {
+          "value": "0.5",
+          "label": "Stock"
+        },
+        {
+          "value": "0.75",
+          "label": "Later"
+        },
+        {
+          "value": "1.0",
+          "label": "Much later"
+        }
+      ],
+      "default": "1.0",
+      "binds": "db"
+    },
+    {
+      "id": "give_up",
+      "type": "choice",
+      "label": "Slides: when they lose the car",
+      "description": "The slide angle at which the AI gives up and spins (the game's value is 23 degrees). Smaller = it spins sooner.",
+      "values": [
+        {
+          "value": "0.4",
+          "label": "Stock (23 deg)"
+        },
+        {
+          "value": "0.3",
+          "label": "Sooner (17 deg)"
+        },
+        {
+          "value": "0.2",
+          "label": "Much sooner (11 deg)"
+        }
+      ],
+      "default": "0.3",
+      "binds": "db"
+    },
+    {
+      "id": "damaged_driving",
+      "type": "choice",
+      "label": "Damage: speed with a damaged car",
+      "description": "How much a damaged AI car slows down for corners and braking. Pushing = half the game's slowdown, Flat out = a quarter. Both also raise the speed limit with a puncture.",
+      "values": [
+        {
+          "value": "careful",
+          "label": "Careful (game)"
+        },
+        {
+          "value": "pushing",
+          "label": "Pushing"
+        },
+        {
+          "value": "flat_out",
+          "label": "Flat out"
+        }
+      ],
+      "default": "pushing",
+      "binds": "db"
+    }
+  ],
+  "operations": {
+    "database": [
+      "db/racecraft.json"
+    ],
+    "native": [
+      {
+        "dll": "native/kizi_ai_driver_behaviour.dll"
+      }
+    ]
+  }
+}
