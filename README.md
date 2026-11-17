@@ -12,7 +12,8 @@ How the AI drivers race other cars, how they handle slides and damage, and how h
 - **Drivers differ:** spreads "When they make room" between drivers: each driver gets their own value around the one above, and attacks from earlier or later and stays in a pass longer or shorter. A driver has the same style in every race. Small, Medium and Big set how far apart the drivers are; Off means all drivers use the plain value. The gap to other cars is not spread, because the game stores it per team car, not per driver. It works on the game's own drivers; a driver added by a mod uses the plain values.
 
 **Slides** (how the AI handles its car when it slides)
-- **How well they catch them**, **Wheelspin out of corners**, **When they lift off**, **When they lose the car:** make the AI catch slides later, spin out more easily, or keep pushing in a slide.
+- **Exit mistakes:** the AI gets on the throttle too early out of corners more often and the rear steps out further.
+- **How well they catch them**, **Wheelspin out of corners**, **When they lift off**, **When they lose the car:** make the AI catch slides later, spin out more easily, or keep pushing in a slide. Steering correction only changes how hard the AI fights a slide; it turns into corners as fast as in the game (until 0.1.9 it also slowed the steering, which made the AI hit the barriers at Monaco).
 
 **Damage**
 - **Speed with a damaged car:** how much a damaged AI car slows down.

@@ -2,9 +2,9 @@
   "schema_version": 1,
   "id": "kizi.ai-driver-behaviour",
   "name": "AI Driver Behaviour",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "author": "Kizi",
-  "description": "How AI drivers race and drive: gap to other cars, making room, slides and spins, damage, pace. Every driver can race differently. Experimental.",
+  "description": "How AI drivers race and drive: gap to other cars, making room, how often they spin, how fast they react to slides and hits, damaged driving. Every driver can race differently. Experimental.",
   "license": "MIT",
   "repository": "https://github.com/Kizikafuka/f1-25-ai-driver-behaviour",
   "icon": "icon.png",
@@ -28,7 +28,7 @@
       "id": "spacing",
       "type": "choice",
       "label": "Close racing: gap to other cars",
-      "description": "The gap an AI car keeps to other cars (the game's value is 0.35). Smaller = closer racing, None = no gap kept. The same for every car.",
+      "description": "The space an AI car leaves to the cars around it, most visible when racing side by side (the game's value is 0.35). Smaller = closer, wheel to wheel. None = no space kept. The same for every car.",
       "values": [
         {
           "value": "0.35",
@@ -62,7 +62,7 @@
       "id": "alongside",
       "type": "choice",
       "label": "Close racing: when they make room",
-      "description": "How much of a car must be alongside an AI car (0 to 1, the game's value is 0.33) before the AI moves over. Higher = it reacts later and holds its line.",
+      "description": "Whether an AI car gives room in a corner when another car is alongside (the game gives room at a third of a car, 0.33). Higher = it gives room later and holds its line.",
       "values": [
         {
           "value": "0.33",
@@ -115,10 +115,92 @@
       "binds": "db"
     },
     {
+      "id": "ai_spins",
+      "type": "choice",
+      "label": "Slides: AI spins",
+      "description": "One setting for how often AI cars slide and spin: exit mistakes, slide catching, traction control, lift-off, give-up angle and reaction to slides together. Custom = use the Custom spins settings.",
+      "values": [
+        {
+          "value": "stock",
+          "label": "Stock (game)"
+        },
+        {
+          "value": "some",
+          "label": "Some"
+        },
+        {
+          "value": "more",
+          "label": "More"
+        },
+        {
+          "value": "lots",
+          "label": "Lots"
+        },
+        {
+          "value": "custom",
+          "label": "Custom"
+        }
+      ],
+      "default": "more",
+      "binds": "db"
+    },
+    {
+      "id": "hit_reaction",
+      "type": "choice",
+      "label": "Reaction: after a hit",
+      "description": "After a hit the AI's steering stays put before it reacts, so the hit can turn the car. Fixed time, or scaled: 0.1 s for a nudge up to 1.0 s for a big hit. Needs Contact Physics.",
+      "values": [
+        {
+          "value": "off",
+          "label": "Off (game)"
+        },
+        {
+          "value": "0.2",
+          "label": "0.2 s"
+        },
+        {
+          "value": "0.4",
+          "label": "0.4 s"
+        },
+        {
+          "value": "0.6",
+          "label": "0.6 s"
+        },
+        {
+          "value": "scaled",
+          "label": "Scales with the hit"
+        }
+      ],
+      "default": "scaled",
+      "binds": "native"
+    },
+    {
+      "id": "exit_mistakes",
+      "type": "choice",
+      "label": "Custom spins: exit mistakes",
+      "description": "Only with AI spins: Custom. Throttle mistakes on corner exit: the AI gets on the throttle early and the rear steps out. More = 30 % bigger, up to 32 deg. Lots = 60 %, up to 42 (game: 23).",
+      "values": [
+        {
+          "value": "stock",
+          "label": "Stock"
+        },
+        {
+          "value": "more",
+          "label": "More"
+        },
+        {
+          "value": "lots",
+          "label": "Lots"
+        }
+      ],
+      "default": "more",
+      "binds": "db"
+    },
+    {
       "id": "steer_correction",
       "type": "choice",
-      "label": "Slides: steering correction",
-      "description": "Scales the AI's steering gains to 75, 50 or 25 % and slows its steering smoothing. Weaker = slides are caught later.",
+      "label": "Custom spins: steering correction",
+      "description": "Only with AI spins: Custom. How hard the AI fights a slide: its steering gains at 75 or 50 %. Weaker = slides are caught later. The AI still turns into corners as fast as in the game.",
       "values": [
         {
           "value": "stock",
@@ -131,20 +213,16 @@
         {
           "value": "50",
           "label": "50%"
-        },
-        {
-          "value": "25",
-          "label": "25%"
         }
       ],
-      "default": "25",
+      "default": "75",
       "binds": "db"
     },
     {
       "id": "traction_control",
       "type": "choice",
-      "label": "Slides: traction control",
-      "description": "Scales the AI's traction control to half or off. Less = more wheelspin on corner exit.",
+      "label": "Custom spins: traction control",
+      "description": "Only with AI spins: Custom. Scales the AI's traction control to half or off. Less = more wheelspin on corner exit.",
       "values": [
         {
           "value": "stock",
@@ -165,8 +243,8 @@
     {
       "id": "throttle_cut",
       "type": "choice",
-      "label": "Slides: when they lift off",
-      "description": "How far into a slide the AI starts lifting off the throttle (the game's value is 0.5). Higher = it keeps full throttle deeper into a slide.",
+      "label": "Custom spins: when they lift off",
+      "description": "Only with AI spins: Custom. How far into a slide the AI starts lifting off the throttle (the game's value is 0.5). Higher = it keeps full throttle deeper into a slide.",
       "values": [
         {
           "value": "0.5",
@@ -187,8 +265,8 @@
     {
       "id": "give_up",
       "type": "choice",
-      "label": "Slides: when they lose the car",
-      "description": "The slide angle at which the AI gives up and spins (the game's value is 23 degrees). Smaller = it spins sooner.",
+      "label": "Custom spins: when they lose the car",
+      "description": "Only with AI spins: Custom. The slide angle at which the AI gives up and spins (the game's value is 23 degrees). Smaller = it spins sooner.",
       "values": [
         {
           "value": "0.4",
@@ -205,6 +283,32 @@
       ],
       "default": "0.3",
       "binds": "db"
+    },
+    {
+      "id": "slide_reaction",
+      "type": "choice",
+      "label": "Custom spins: reaction to slides",
+      "description": "Only with AI spins: Custom. When an AI car starts to slide, its steering and throttle stay put this long before it reacts, so some slides become spins. The game reacts at once.",
+      "values": [
+        {
+          "value": "off",
+          "label": "Off (game)"
+        },
+        {
+          "value": "quick",
+          "label": "Quick (0.15 s)"
+        },
+        {
+          "value": "normal",
+          "label": "Normal (0.25 s)"
+        },
+        {
+          "value": "slow",
+          "label": "Slow (0.4 s)"
+        }
+      ],
+      "default": "normal",
+      "binds": "native"
     },
     {
       "id": "damaged_driving",

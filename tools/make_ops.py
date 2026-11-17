@@ -24,7 +24,7 @@ FIELDS = [
     # racecraft: space an AI car keeps from other cars (stock 0.35 at every speed; x = speed 50..500)
     ("entrants.vehicles", "vehicle", "ai_vehicle_config.buffer_space_settings.vehicle_buffer",
      curve(50, 500, ["0", "0", "0.4736842", "1", "1"], "spacing")),
-    # car control (stock 0.5 / 0.4 rad). The AI's reaction after a hit is not here: AI Racing Tweaks does that in memory.
+    # car control (stock 0.5 / 0.4 rad). The AI's reaction after a hit / to a slide is in memory (native/src).
     ("entrants.vehicles", "vehicle", "ai_vehicle_config.pedal_controller.lateral_traction_slip_angle_cut_in_proportion", "{{throttle_cut}}"),
     ("entrants.vehicles", "vehicle", "ai_vehicle_config.lost_control.angle", "{{give_up}}"),
 ]
@@ -40,12 +40,18 @@ def num(x):
     return f"{x:.4f}".rstrip("0").rstrip(".") if x != int(x) else str(int(x))
 
 
-def scale_curve(curve, f):
-    """'@v2@minx:..,maxx:..,miny:..,maxy:..,x:y,...' with every point's y times f."""
+def scale_curve(curve, f, cap=None):
+    """'@v2@minx:..,maxx:..,miny:..,maxy:..,x:y,...' with every point's y times f (and at most cap)."""
     head, body = curve[:4], curve[4:].split(",")
     pts = [p for p in body if not p.split(":")[0] in ("minx", "maxx", "miny", "maxy")]
     keep = [p for p in body if p.split(":")[0] in ("minx", "maxx", "miny", "maxy")]
-    return head + ",".join(keep + [f"{p.split(':')[0]}:{num(float(p.split(':')[1]) * f)}" for p in pts])
+    y = lambda p: float(p.split(":")[1]) * f if cap is None else min(cap, float(p.split(":")[1]) * f)
+    return head + ",".join(keep + [f"{p.split(':')[0]}:{num(y(p))}" for p in pts])
+
+
+# Exit mistakes (option "exit_mistakes"): level -> (driver throttle error scale, biggest exit slide in degrees, stock 23).
+EXIT = {"more": (1.3, 32), "lots": (1.6, 42)}
+EXIT_ERR = "ai_driver_config.exit_fallibility.throttle_error_qualifying_race"
 
 
 # Per-driver style ("variety"): every driver row of the game database (ai_driver_config) gets its own number a in -1..1, fixed by the
@@ -88,12 +94,20 @@ for i in range(int(val("entrants.drivers._driver_instancecount_") or 0)):
         for vlevel, vs in VARIETY.items():
             ops.append({"op": "set", "select": sel, "field": field, "value": num(max(0.2, float(stock) * mul(a, vs))),
                         "when": {"variety": vlevel}})
+    # Exit mistakes: exit_fallibility.throttle_error_qualifying_race (per driver, stock mostly 0.28..0.55 with a tail to 1)
+    # is the size of a throttle mistake on corner exit; every point times the level, capped at 1.
+    err = val(f"entrants.drivers.driver_{i}.{EXIT_ERR}")
+    if err and err.startswith("@v2@"):
+        for level, (f, _) in EXIT.items():
+            ops.append({"op": "set", "select": sel, "field": EXIT_ERR, "value": scale_curve(err, f, 1.0),
+                        "when": {"exit_mistakes": level}})
 
 
 # Per-level options: one op per car and level, computed from that car's own stock value and gated with "when".
-# Steering correction: the AI's steering PID (stock e.g. P -2 / I -1 / D -0.5, output smoothing 0.3 s) straightens
-# the car at once after a push. Lower gains + slower output = it catches slides late.
-STEER = {"75": 0.75, "50": 0.5, "25": 0.25}
+# Steering correction: the AI's steering PID (stock e.g. P -2 / I -1 / D -0.5) straightens the car at once after a push.
+# Lower gains = it catches slides late. The output smoothing (stock 0.3 s) stays the game's: until 0.1.9 it was slowed
+# too (up to 1.2 s), which made the AI steer late in every corner and hit the inside barriers at Monaco.
+STEER = {"75": 0.75, "50": 0.5}   # 25 % was removed in 0.1.12: too weak to hold the line at Monaco
 PID = "ai_vehicle_config.steering_pid_settings."
 # AI traction control: traction_control.grip_atc_strength curve (stock ~0.53 on F1 cars); lower = more wheelspin.
 ATC = {"half": 0.5, "off": 0.0}
@@ -108,10 +122,11 @@ for i in range(int(val("entrants.vehicles._vehicle_instancecount_") or 0)):
             if stock is not None:
                 ops.append({"op": "set", "select": sel, "field": PID + k, "value": num(float(stock) * f),
                             "when": {"steer_correction": level}})
-        stock = val(f"entrants.vehicles.vehicle_{i}.{PID}output_smoothing_half_life")
-        if stock is not None:
-            ops.append({"op": "set", "select": sel, "field": PID + "output_smoothing_half_life",
-                        "value": num(float(stock) / f), "when": {"steer_correction": level}})
+    stock = val(f"entrants.vehicles.vehicle_{i}.ai_vehicle_config.exit_fallibility.max_yaw_angle_deg")
+    if stock is not None and not label.startswith("safety_car"):   # the safety cars make no exit mistakes
+        for level, (_, deg) in EXIT.items():
+            ops.append({"op": "set", "select": sel, "field": "ai_vehicle_config.exit_fallibility.max_yaw_angle_deg",
+                        "value": num(max(float(stock), deg)), "when": {"exit_mistakes": level}})
     # Damaged car driving: how much a damaged AI car slows down (damage_settings: aero 0.12 / 0.04 / 0.1, burst
     # 0.325 / 0.3 / 0.25 on F1 cars = corner speed cut / wider line / earlier braking) and its puncture speed cap.
     for level, (f, cap) in {"pushing": (0.5, 1.5), "flat_out": (0.25, 2.0)}.items():
@@ -130,6 +145,8 @@ for i in range(int(val("entrants.vehicles._vehicle_instancecount_") or 0)):
         for level, f in ATC.items():
             ops.append({"op": "set", "select": sel, "field": "ai_vehicle_config.traction_control.grip_atc_strength",
                         "value": scale_curve(curve, f), "when": {"traction_control": level}})
+import spin_presets
+ops = spin_presets.expand(ops)                    # the "AI spins" preset (0.2.0)
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "db", "racecraft.json")
 json.dump({"schema_version": 1, "ops": ops}, open(out, "w", encoding="utf-8", newline="\n"), indent=1)
 print(f"{len(ops)} ops -> {os.path.normpath(out)}")

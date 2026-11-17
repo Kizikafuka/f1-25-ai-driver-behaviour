@@ -4,6 +4,11 @@
       "id": "kizi.ai-tweaks",
       "version": "<0.5.0",
       "why": "the old AI Racing Tweaks also sets the racecraft, car control and driver variation values; update it"
+    },
+    {
+      "id": "kizi.ai-tweaks",
+      "version": ">=0.5.0, <0.8.0",
+      "why": "Contact Physics before 0.8.0 has its own AI reaction settings, which moved to this addon in 0.2.0; update Contact Physics"
     }
   ]
 }
